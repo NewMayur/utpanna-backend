@@ -1,0 +1,10 @@
+# version: '3'
+services:
+  utpanna-backend:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - SQLALCHEMY_DATABASE_URI=sqlite:////app/data/database.db

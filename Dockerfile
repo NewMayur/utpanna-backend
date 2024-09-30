@@ -2,6 +2,8 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
+RUN mkdir /app/data
+
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 

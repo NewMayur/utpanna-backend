@@ -1,2 +1,30 @@
-/pubspec.yaml
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+env/
 .venv/
+
+# SQLite database
+*.db
+.instance/
+database.db
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# Environment variables
+.env
+
+# Log files
+*.log
+
+# Flutter-related (if needed)
+/pubspec.yaml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
