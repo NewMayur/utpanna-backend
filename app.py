@@ -8,7 +8,7 @@ import os
 app = Flask(__name__, static_folder='templates/web', static_url_path='')
 
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///farmer_group_buy.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///database.db')
 app.config['JWT_SECRET_KEY'] = 'secret'  # Change this!
 app.config['CACHE_TYPE'] = 'redis'
 app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
@@ -47,8 +47,9 @@ def test():
 #         return send_from_directory(app.static_folder, path)
 #     else:
 #         return send_from_directory(app.static_folder, 'index.html')
-
-if __name__ == '__main__':
-    with app.app_context():
+with app.app_context():
         db.create_all()
+        
+if __name__ == '__main__':
+    
     app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
