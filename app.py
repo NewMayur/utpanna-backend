@@ -2,19 +2,32 @@ from flask import Flask, send_from_directory, jsonify
 from flask_jwt_extended import JWTManager
 from flask_caching import Cache
 from flask_cors import CORS
+from datetime import timedelta
 from models.models import db
+
+import firebase_admin
+from firebase_admin import credentials
 import os
+# from dotenv import load_dotenv
+
+# load_dotenv()
+
+# Initialize Firebase
+cred_path = os.getenv('FIREBASE_ADMINSDK_PATH')
+cred = credentials.Certificate(cred_path)
+firebase_admin.initialize_app(cred)
 
 app = Flask(__name__, static_folder='templates/web', static_url_path='')
 
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///database.db')
-app.config['JWT_SECRET_KEY'] = 'secret'  # Change this!
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = os.getenv('JWT_ACCESS_TOKEN_EXPIRES')
 app.config['CACHE_TYPE'] = 'redis'
 app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
 
-db.init_app(app)
 jwt = JWTManager(app)
+db.init_app(app)
 
 try:
     cache = Cache(app)
@@ -25,10 +38,11 @@ except ModuleNotFoundError:
     cache = Cache(app)
 
 # Import and register blueprints
-from routes.auth_routes import auth
+from routes.auth_routes import auth_bp
 from routes.deal_routes import deal
 
-app.register_blueprint(auth)
+app.register_blueprint(auth_bp, url_prefix='/auth')
+# app.register_blueprint(auth)
 app.register_blueprint(deal)
 
 @app.route('/test', methods=['GET'])
