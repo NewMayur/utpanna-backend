@@ -28,3 +28,6 @@ database.db
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Other fles
+/config
