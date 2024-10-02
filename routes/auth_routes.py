@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from firebase_admin import auth
 from models.models import User, db
 from utils.auth_utils import firebase_token_required
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -46,8 +46,14 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
     if user and user.password == data['password']:
         access_token = create_access_token(identity=user.id)
-        return jsonify(access_token=access_token), 200
+        return jsonify(access_token=access_token, token_type="Bearer"), 200
     return jsonify({"message": "Invalid username or password"}), 401
+
+@auth_bp.route('/protected', methods=['GET'])
+@jwt_required()
+def protected():
+    current_user_id = get_jwt_identity()
+    return jsonify(logged_in_as=current_user_id), 200
 
 @auth_bp.route('/logout', methods=['POST'])
 @firebase_token_required()

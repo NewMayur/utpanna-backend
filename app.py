@@ -14,6 +14,7 @@ cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 
 app = Flask(__name__)
+jwt = JWTManager(app)
 
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
