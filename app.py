@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask_caching import Cache
 from flask_cors import CORS
 from models.models import db
+from flask_jwt_extended import JWTManager
 
 import firebase_admin
 from firebase_admin import credentials
@@ -16,6 +17,7 @@ app = Flask(__name__)
 
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 app.config['CACHE_TYPE'] = 'redis'
 app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
 
