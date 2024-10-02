@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from utils.auth_utils import firebase_token_required
 from models.models import Deal, db
 
 deal = Blueprint('deal', __name__)
 
 @deal.route('/deals', methods=['GET'])
-@jwt_required()
+@firebase_token_required()
 def get_deals():
     deals = Deal.query.all()
     deal_data = []
@@ -24,7 +24,7 @@ def get_deals():
     return jsonify(deal_data), 200
 
 @deal.route('/deals', methods=['POST'])
-@jwt_required()
+@firebase_token_required()
 def create_deal():
     data = request.get_json()
     new_deal = Deal(
@@ -38,7 +38,7 @@ def create_deal():
     return jsonify({"message": "Deal created successfully"}), 201
 
 @deal.route('/deals/<int:deal_id>', methods=['GET'])
-@jwt_required()
+@firebase_token_required()
 def get_deal(deal_id):
     deal = Deal.query.get(deal_id)
     if deal:
@@ -57,7 +57,7 @@ def get_deal(deal_id):
     return jsonify({"message": "Deal not found"}), 404
 
 @deal.route('/deals/<int:deal_id>', methods=['PUT'])
-@jwt_required()
+@firebase_token_required()
 def update_deal(deal_id):
     deal = Deal.query.get(deal_id)
     if deal:
@@ -71,7 +71,7 @@ def update_deal(deal_id):
     return jsonify({"message": "Deal not found"}), 404
 
 @deal.route('/deals/<int:deal_id>', methods=['DELETE'])
-@jwt_required()
+@firebase_token_required()
 def delete_deal(deal_id):
     deal = Deal.query.get(deal_id)
     if deal:
@@ -81,7 +81,7 @@ def delete_deal(deal_id):
     return jsonify({"message": "Deal not found"}), 404
 
 @deal.route('/search', methods=['GET'])
-@jwt_required()
+@firebase_token_required()
 def search_deals():
     query = request.args.get('query', '')
     # TODO: Implement search logic
