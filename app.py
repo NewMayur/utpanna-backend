@@ -10,15 +10,14 @@ import os, json
 from utils.secrets import access_secret_version
 
 # Initialize Firebase
-# Initialize Firebase
-project_id = "340480522275"  # Replace with your actual project ID
-secret_id = "FIREBASE_ADMINSDK_PATH"  # Replace with your actual secret ID
+project_id = os.getenv('PROJECT_ID') 
+secret_id = os.getenv('SECRET_ID') 
 cred_json = access_secret_version(project_id, secret_id)
 cred = credentials.Certificate(json.loads(cred_json))
 firebase_admin.initialize_app(cred)
 
 # Retrieve JWT secret key
-jwt_secret_id = 'JWT_SECRET_KEY'  # Replace with your actual secret ID
+jwt_secret_id = os.getenv('JWT_SECRET_ID')
 
 app = Flask(__name__)
 jwt = JWTManager(app)
