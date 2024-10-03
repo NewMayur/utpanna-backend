@@ -3,22 +3,30 @@ from flask_caching import Cache
 from flask_cors import CORS
 from models.models import db
 from flask_jwt_extended import JWTManager
-
 import firebase_admin
 from firebase_admin import credentials
-import os
+import os, json
+
+from utils.secrets import access_secret_version
 
 # Initialize Firebase
-cred_path = os.getenv('FIREBASE_ADMINSDK_PATH')
-cred = credentials.Certificate(cred_path)
+# Initialize Firebase
+project_id = "340480522275"  # Replace with your actual project ID
+secret_id = "FIREBASE_ADMINSDK_PATH"  # Replace with your actual secret ID
+cred_json = access_secret_version(project_id, secret_id)
+cred = credentials.Certificate(json.loads(cred_json))
 firebase_admin.initialize_app(cred)
+
+# Retrieve JWT secret key
+jwt_secret_id = 'JWT_SECRET_KEY'  # Replace with your actual secret ID
 
 app = Flask(__name__)
 jwt = JWTManager(app)
 
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = access_secret_version(project_id, jwt_secret_id)
+print(app.config['JWT_SECRET_KEY'])
 app.config['CACHE_TYPE'] = 'redis'
 app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
 
