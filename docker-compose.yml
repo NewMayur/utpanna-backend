@@ -2,9 +2,11 @@
 services:
   utpanna-backend:
     build: .
+    image: gcr.io/utpanna-dev/utpanna-backend:latest
     ports:
       - "8080:8080"
     volumes:
       - ./data:/app/data
     environment:
-      - SQLALCHEMY_DATABASE_URI=sqlite:////app/data/database.db
+      - SQLALCHEMY_DATABASE_URI=sqlite:///database.db
+      - JWT_ACCESS_TOKEN_EXPIRES=timedelta(days=30)
