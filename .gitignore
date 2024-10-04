@@ -40,3 +40,4 @@ models/__pycache__/__init__.cpython-312.pyc
 models/__pycache__/models.cpython-312.pyc
 routes/__pycache__/auth_routes.cpython-312.pyc
 routes/__pycache__/deal_routes.cpython-312.pyc
+mysql-integration.txt

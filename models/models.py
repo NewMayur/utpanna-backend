@@ -1,7 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func
+from extensions import db
 
-db = SQLAlchemy()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -18,8 +19,34 @@ class Deal(db.Model):
     min_participants = db.Column(db.Integer, nullable=False)
     current_participants = db.Column(db.Integer, default=0)
     status = db.Column(db.String(20), default='open')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=func.now())
+    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+
+class DealImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'), nullable=False)
+    image_url = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=func.now())
+    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship with Deal model
+    deal = db.relationship('Deal', backref=db.backref('images', lazy=True))
+
+    @staticmethod
+    def add_deal_image(deal_id, image_url):
+        try:
+            new_image = DealImage(deal_id=deal_id, image_url=image_url)
+            db.session.add(new_image)
+            db.session.commit()
+            return new_image
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise e
+
+    @staticmethod
+    def get_deal_images(deal_id):
+        return DealImage.query.filter_by(deal_id=deal_id).all()
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)

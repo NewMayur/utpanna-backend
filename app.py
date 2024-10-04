@@ -6,8 +6,11 @@ from flask_jwt_extended import JWTManager
 import firebase_admin
 from firebase_admin import credentials
 import os, json
-
 from utils.secrets import access_secret_version
+from models.models import *
+from extensions import db, migrate
+from models.models import User, Deal, Group, Order
+# from dotenv import load_dotenv
 
 # Initialize Firebase
 project_id = os.getenv('PROJECT_ID') 
@@ -21,15 +24,16 @@ jwt_secret_id = os.getenv('JWT_SECRET_ID')
 
 app = Flask(__name__)
 jwt = JWTManager(app)
+# load_dotenv()
 
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('MYSQL_DATABASE_URI')
 app.config['JWT_SECRET_KEY'] = access_secret_version(project_id, jwt_secret_id)
-print(app.config['JWT_SECRET_KEY'])
 app.config['CACHE_TYPE'] = 'redis'
 app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
 
 db.init_app(app)
+migrate.init_app(app, db)
 
 try:
     cache = Cache(app)
