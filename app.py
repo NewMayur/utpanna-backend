@@ -23,7 +23,7 @@ app = Flask(__name__)
 jwt = JWTManager(app)
 
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('MYSQL_DATABASE_URI')
 app.config['JWT_SECRET_KEY'] = access_secret_version(project_id, jwt_secret_id)
 print(app.config['JWT_SECRET_KEY'])
 app.config['CACHE_TYPE'] = 'redis'
