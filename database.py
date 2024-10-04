@@ -23,9 +23,9 @@ class DatabaseManager:
         return User.query.filter_by(email=email).first()
 
     @staticmethod
-    def add_deal(title, description, price, location, user_id):
+    def add_deal(title, description, price, user_id, min_participants):
         try:
-            new_deal = Deal(title=title, description=description, price=price, location=location, user_id=user_id)
+            new_deal = Deal(title=title, description=description, price=price, user_id=user_id, min_participants=min_participants)
             db.session.add(new_deal)
             db.session.commit()
             return new_deal
@@ -42,14 +42,13 @@ class DatabaseManager:
         return Deal.query.all()
 
     @staticmethod
-    def update_deal(deal_id, title, description, price, location):
+    def update_deal(deal_id, title, description, price):
         try:
             deal = Deal.query.get(deal_id)
             if deal:
                 deal.title = title
                 deal.description = description
                 deal.price = price
-                deal.location = location
                 db.session.commit()
                 return deal
             return None

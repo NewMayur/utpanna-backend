@@ -52,8 +52,8 @@ def create_deal():
         title=data['title'],
         description=data['description'],
         price=data['price'],
-        location=data.get('location', ''),
-        user_id=user_id
+        user_id=user_id,
+        min_participants=data['min_participants']
     )
     return jsonify({"message": "Deal created successfully", "deal_id": new_deal.id}), 201
 
@@ -85,7 +85,6 @@ def update_deal(deal_id):
         title=data.get('title'),
         description=data.get('description'),
         price=data.get('price'),
-        location=data.get('location')
     )
     if updated_deal:
         return jsonify({"message": "Deal updated successfully"}), 200
