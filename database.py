@@ -1,98 +1,150 @@
-from models.models import db, User, Deal, DealImage
+from models.models import User, Deal, DealImage
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
+from utils.mysql_connector import connect_with_connector
+
+engine = connect_with_connector()
+Session = sessionmaker(bind=engine)
 
 class DatabaseManager:
     @staticmethod
-    def add_user(username, email, password):
+    def add_user(username, email, password, firebase_uid=None, phone_number=None):
+        session = Session()
         try:
-            new_user = User(username=username, email=email)
-            new_user.set_password(password)
-            db.session.add(new_user)
-            db.session.commit()
+            new_user = User(username=username, email=email, firebase_uid=firebase_uid, phone_number=phone_number)
+            if password:
+                new_user.set_password(password)
+            session.add(new_user)
+            session.commit()
             return new_user
         except SQLAlchemyError as e:
-            db.session.rollback()
+            session.rollback()
             raise e
+        finally:
+            session.close()
 
     @staticmethod
     def get_user_by_username(username):
-        return User.query.filter_by(username=username).first()
+        session = Session()
+        try:
+            return session.query(User).filter_by(username=username).first()
+        finally:
+            session.close()
 
     @staticmethod
     def get_user_by_email(email):
-        return User.query.filter_by(email=email).first()
+        session = Session()
+        try:
+            return session.query(User).filter_by(email=email).first()
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_user_by_firebase_uid(firebase_uid):
+        session = Session()
+        try:
+            return session.query(User).filter_by(firebase_uid=firebase_uid).first()
+        finally:
+            session.close()
 
     @staticmethod
     def add_deal(title, description, price, user_id, min_participants):
+        session = Session()
         try:
             new_deal = Deal(title=title, description=description, price=price, user_id=user_id, min_participants=min_participants)
-            db.session.add(new_deal)
-            db.session.commit()
+            session.add(new_deal)
+            session.commit()
             return new_deal
         except SQLAlchemyError as e:
-            db.session.rollback()
+            session.rollback()
             raise e
+        finally:
+            session.close()
 
     @staticmethod
     def get_deal(deal_id):
-        return Deal.query.get(deal_id)
+        session = Session()
+        try:
+            return session.query(Deal).get(deal_id)
+        finally:
+            session.close()
 
     @staticmethod
     def get_all_deals():
-        return Deal.query.all()
+        session = Session()
+        try:
+            return session.query(Deal).all()
+        finally:
+            session.close()
 
     @staticmethod
     def update_deal(deal_id, title, description, price):
+        session = Session()
         try:
-            deal = Deal.query.get(deal_id)
+            deal = session.query(Deal).get(deal_id)
             if deal:
                 deal.title = title
                 deal.description = description
                 deal.price = price
-                db.session.commit()
+                session.commit()
                 return deal
             return None
         except SQLAlchemyError as e:
-            db.session.rollback()
+            session.rollback()
             raise e
+        finally:
+            session.close()
 
     @staticmethod
     def delete_deal(deal_id):
+        session = Session()
         try:
-            deal = Deal.query.get(deal_id)
+            deal = session.query(Deal).get(deal_id)
             if deal:
-                db.session.delete(deal)
-                db.session.commit()
+                session.delete(deal)
+                session.commit()
                 return True
             return False
         except SQLAlchemyError as e:
-            db.session.rollback()
+            session.rollback()
             raise e
+        finally:
+            session.close()
 
     @staticmethod
     def add_deal_image(deal_id, image_url):
+        session = Session()
         try:
             new_image = DealImage(deal_id=deal_id, image_url=image_url)
-            db.session.add(new_image)
-            db.session.commit()
+            session.add(new_image)
+            session.commit()
             return new_image
         except SQLAlchemyError as e:
-            db.session.rollback()
+            session.rollback()
             raise e
+        finally:
+            session.close()
 
     @staticmethod
     def get_deal_images(deal_id):
-        return DealImage.query.filter_by(deal_id=deal_id).all()
+        session = Session()
+        try:
+            return session.query(DealImage).filter_by(deal_id=deal_id).all()
+        finally:
+            session.close()
 
     @staticmethod
     def delete_deal_image(image_id):
+        session = Session()
         try:
-            image = DealImage.query.get(image_id)
+            image = session.query(DealImage).get(image_id)
             if image:
-                db.session.delete(image)
-                db.session.commit()
+                session.delete(image)
+                session.commit()
                 return True
             return False
         except SQLAlchemyError as e:
-            db.session.rollback()
+            session.rollback()
             raise e
+        finally:
+            session.close()

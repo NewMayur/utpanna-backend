@@ -19,8 +19,8 @@ def get_deals():
             'min_participants': deal.min_participants,
             'current_participants': deal.current_participants,
             'status': deal.status,
-            'created_at': deal.created_at,
-            'updated_at': deal.updated_at
+            'created_at': str(deal.created_at),
+            'updated_at': str(deal.updated_at)
         })
     return jsonify(deal_data), 200
 
@@ -38,8 +38,8 @@ def get_deal_list():
             'min_participants': deal.min_participants,
             'current_participants': deal.current_participants,
             'status': deal.status,
-            'created_at': deal.created_at,
-            'updated_at': deal.updated_at
+            'created_at': str(deal.created_at),
+            'updated_at': str(deal.updated_at)
         })
     return jsonify(deal_data), 200
 
@@ -70,8 +70,8 @@ def get_deal(deal_id):
             'min_participants': deal.min_participants,
             'current_participants': deal.current_participants,
             'status': deal.status,
-            'created_at': deal.created_at,
-            'updated_at': deal.updated_at
+            'created_at': str(deal.created_at),
+            'updated_at': str(deal.updated_at)
         }
         return jsonify(deal_data), 200
     return jsonify({"message": "Deal not found"}), 404

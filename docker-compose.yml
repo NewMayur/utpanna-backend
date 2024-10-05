@@ -1,4 +1,3 @@
-version: '3'
 services:
   utpanna-backend:
     build: .
@@ -7,19 +6,18 @@ services:
       - "8080:8080"
     volumes:
       - ./data:/app/data
-    environment:
-      - MYSQL_DATABASE_URI=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db/${MYSQL_DATABASE}
-      - JWT_ACCESS_TOKEN_EXPIRES=timedelta(days=30)
     depends_on:
       - db
+    environment:
+      - PROJECT_ID=340480522275
+      - SECRET_ID=FIREBASE_ADMINSDK_PATH
 
   db:
-    image: mysql:8.0
+    image: utpanna-dev-db
     restart: always
-    environment:
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
     volumes:
       - mysql_data:/var/lib/mysql
+      - /cloudsql:/cloudsql
 
 volumes:
   mysql_data:
