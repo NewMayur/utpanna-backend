@@ -19,13 +19,10 @@ ENV MYSQLCLIENT_LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lmysqlclient"
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
+# Copy the app credentials JSON
+COPY config/utpanna-dev-73134e781b83.json /app/utpanna-dev-73134e781b83.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/utpanna-dev-73134e781b83.json
 # Copy the rest of the application
 COPY . .
-
-# Make sure the entrypoint script is executable
-RUN chmod +x /app/entrypoint.sh
-
-# Use the entrypoint script to run the application
-ENTRYPOINT ["/app/entrypoint.sh"]
 
 CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]

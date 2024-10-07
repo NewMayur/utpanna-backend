@@ -8,12 +8,10 @@ Flask-Cors==5.0.0
 Flask-Caching==2.3.0
 firebase-admin==6.5.0
 google-cloud-secret-manager==2.20.2
-google-cloud-sql-connector==1.12.1
+cloud-sql-python_connector==1.12.1
 gunicorn==20.1.0
 alembic==1.13.3
 mysqlclient==2.2.4
-
-# Keep the rest of the dependencies as they are in the original requirements.txt
 aiofiles==24.1.0
 aiohappyeyeballs==2.4.3
 aiohttp==3.10.9
