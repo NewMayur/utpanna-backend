@@ -13,7 +13,7 @@ class User(Base):
     phone_number = Column(String(20), unique=True, nullable=True)
     username = Column(String(80), unique=True, nullable=True)
     email = Column(String(120), unique=True, nullable=True)
-    password_hash = Column(String(128), nullable=True)
+    password_hash = Column(String(255), nullable=True)  # Changed from 128 to 255
 
     groups = relationship('Group', back_populates='creator')
     orders = relationship('Order', back_populates='user')

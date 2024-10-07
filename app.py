@@ -8,6 +8,7 @@ import os
 import json
 from utils.secrets import access_secret_version
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
 import logging
 from extensions import engine, Session, init_db, init_migrations, apply_migrations
 from dotenv import load_dotenv
@@ -31,6 +32,12 @@ jwt = JWTManager(app)
 app.config['JWT_SECRET_KEY'] = access_secret_version(project_id, 'JWT_SECRET_KEY')
 app.config['CACHE_TYPE'] = 'simple'
 
+# Use the engine created by connect_with_connector()
+app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+logger.info(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
 cache = Cache(app)
 CORS(app)
 
@@ -38,9 +45,11 @@ CORS(app)
 from models.models import Base, User, Deal, Group, Order
 
 # Initialize database and migrations
-with app.app_context():
+with engine.connect() as connection:
+    logger.info("Initializing database and migrations...")
     init_db(app)
     init_migrations(app)
+    logger.info("Database and migrations initialized successfully.")
 
 # Import and register blueprints
 from routes.auth_routes import auth_bp
@@ -57,7 +66,7 @@ def test():
 def db_test():
     try:
         with engine.connect() as connection:
-            result = connection.execute("SELECT 1")
+            result = connection.execute(text("SELECT 1"))
             return jsonify({"message": "Database connection successful", "result": result.fetchone()[0]}), 200
     except SQLAlchemyError as e:
         logger.error(f"Database connection failed: {str(e)}")
@@ -71,7 +80,16 @@ def create_session():
 def shutdown_session(exception=None):
     Session.remove()
 
+def test_db_connection():
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT 1"))
+            logger.info(f"Initial database connection test successful: {result.fetchone()[0]}")
+    except SQLAlchemyError as e:
+        logger.error(f"Initial database connection test failed: {str(e)}")
+        raise
+
 if __name__ == '__main__':
-    # Apply any pending migrations
-    apply_migrations()
+    logger.info("Starting the application...")
+    test_db_connection()
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))

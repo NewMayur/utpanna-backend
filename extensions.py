@@ -1,8 +1,12 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from alembic.config import Config
 from alembic import command
 from utils.mysql_connector import connect_with_connector
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create SQLAlchemy engine
 engine = connect_with_connector()
@@ -25,14 +29,26 @@ def init_migrations(app):
     alembic_cfg.set_main_option("script_location", "migrations")
     alembic_cfg.set_main_option("sqlalchemy.url", str(engine.url))
 
-    # Create the migrations directory if it doesn't exist
-    command.init(alembic_cfg, "migrations")
+    # Check if the migrations directory exists
+    if not os.path.exists("migrations"):
+        logger.info("Creating migrations directory...")
+        # Create the migrations directory if it doesn't exist
+        command.init(alembic_cfg, "migrations")
+    else:
+        logger.info("Migrations directory already exists. Skipping creation.")
 
-    # Generate an initial migration
-    command.revision(alembic_cfg, autogenerate=True, message="Initial migration")
+    try:
+        # Generate an initial migration
+        command.revision(alembic_cfg, autogenerate=True, message="Initial migration")
+    except Exception as e:
+        logger.warning(f"Error generating initial migration: {str(e)}. This may be normal if migrations already exist.")
 
-    # Apply the migration
-    command.upgrade(alembic_cfg, "head")
+    try:
+        # Apply the migration
+        command.upgrade(alembic_cfg, "head")
+    except Exception as e:
+        logger.error(f"Error applying migration: {str(e)}")
+        raise
 
 def apply_migrations():
     alembic_cfg = Config("migrations/alembic.ini")
