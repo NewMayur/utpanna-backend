@@ -8,12 +8,16 @@ services:
       - ./data:/app/data
     depends_on:
       - db
+    environment:
+      - PROJECT_ID=340480522275
+      - SECRET_ID=FIREBASE_ADMINSDK_PATH
 
   db:
     image: utpanna-dev-db
     restart: always
     volumes:
       - mysql_data:/var/lib/mysql
+      - /cloudsql:/cloudsql
 
 volumes:
   mysql_data:

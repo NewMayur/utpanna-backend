@@ -1,69 +1,75 @@
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime, ForeignKey, func
+from sqlalchemy.orm import relationship
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import func
-from extensions import db
+from sqlalchemy.ext.declarative import declarative_base
+from werkzeug.security import generate_password_hash, check_password_hash
 
+Base = declarative_base()
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    firebase_uid = db.Column(db.String(128), unique=True, nullable=True)
-    phone_number = db.Column(db.String(20), unique=True, nullable=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
+class User(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    firebase_uid = Column(String(128), unique=True, nullable=True)
+    phone_number = Column(String(20), unique=True, nullable=True)
+    username = Column(String(80), unique=True, nullable=True)
+    email = Column(String(120), unique=True, nullable=True)
+    password_hash = Column(String(255), nullable=True)  # Changed from 128 to 255
 
-class Deal(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    min_participants = db.Column(db.Integer, nullable=False)
-    current_participants = db.Column(db.Integer, default=0)
-    status = db.Column(db.String(20), default='open')
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, server_default=func.now())
-    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+    groups = relationship('Group', back_populates='creator')
+    orders = relationship('Order', back_populates='user')
 
-class DealImage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'), nullable=False)
-    image_url = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, server_default=func.now())
-    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-    # Relationship with Deal model
-    deal = db.relationship('Deal', backref=db.backref('images', lazy=True))
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
-    @staticmethod
-    def add_deal_image(deal_id, image_url):
-        try:
-            new_image = DealImage(deal_id=deal_id, image_url=image_url)
-            db.session.add(new_image)
-            db.session.commit()
-            return new_image
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            raise e
+class Deal(Base):
+    __tablename__ = 'deal'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    price = Column(Float, nullable=False)
+    min_participants = Column(Integer, nullable=False)
+    current_participants = Column(Integer, default=0)
+    status = Column(String(20), default='open')
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    @staticmethod
-    def get_deal_images(deal_id):
-        return DealImage.query.filter_by(deal_id=deal_id).all()
+    groups = relationship('Group', back_populates='deal')
+    orders = relationship('Order', back_populates='deal')
+    images = relationship('DealImage', back_populates='deal')
 
-class Group(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'), nullable=False)
+class DealImage(Base):
+    __tablename__ = 'deal_image'
+    id = Column(Integer, primary_key=True)
+    deal_id = Column(Integer, ForeignKey('deal.id'), nullable=False)
+    image_url = Column(String(255), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-class Order(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'), nullable=False)
-    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
-    status = db.Column(db.String(20), default='pending')
+    deal = relationship('Deal', back_populates='images')
 
-# Add relationships
-User.groups = db.relationship('Group', backref='creator', lazy=True)
-User.orders = db.relationship('Order', backref='user', lazy=True)
-Deal.groups = db.relationship('Group', backref='deal', lazy=True)
-Deal.orders = db.relationship('Order', backref='deal', lazy=True)
-Group.orders = db.relationship('Order', backref='group', lazy=True)
+class Group(Base):
+    __tablename__ = 'group'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    creator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    deal_id = Column(Integer, ForeignKey('deal.id'), nullable=False)
+
+    creator = relationship('User', back_populates='groups')
+    deal = relationship('Deal', back_populates='groups')
+    orders = relationship('Order', back_populates='group')
+
+class Order(Base):
+    __tablename__ = 'order'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    deal_id = Column(Integer, ForeignKey('deal.id'), nullable=False)
+    group_id = Column(Integer, ForeignKey('group.id'), nullable=False)
+    status = Column(String(20), default='pending')
+
+    user = relationship('User', back_populates='orders')
+    deal = relationship('Deal', back_populates='orders')
+    group = relationship('Group', back_populates='orders')
