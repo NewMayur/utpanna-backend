@@ -1,5 +1,5 @@
 services:
-  utpanna-backend:
+  utpanna-dev-backend:
     build: .
     image: gcr.io/utpanna-dev/utpanna-backend:latest
     ports:
@@ -8,9 +8,6 @@ services:
       - ./data:/app/data
     depends_on:
       - db
-    environment:
-      - PROJECT_ID=340480522275
-      - SECRET_ID=FIREBASE_ADMINSDK_PATH
 
   db:
     image: utpanna-dev-db
