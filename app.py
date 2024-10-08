@@ -10,7 +10,7 @@ from utils.secrets import access_secret_version
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 import logging
-from extensions import engine, Session, init_db, init_migrations, apply_migrations
+from extensions import engine, Session
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,9 +22,8 @@ logger = logging.getLogger(__name__)
 project_id = os.getenv('PROJECT_ID')
 cred_json = access_secret_version(project_id, 'FIREBASE_ADMINSDK_PATH')
 cred = credentials.Certificate(json.loads(cred_json))
-firebase_admin.initialize_app(cred)
 
-GOOGLE_APPLICATION_CREDENTIALS = access_secret_version(project_id, 'GOOGLE_APPLICATION_CREDENTIALS')
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
 app = Flask(__name__)
 jwt = JWTManager(app)
@@ -40,16 +39,6 @@ logger.info(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 cache = Cache(app)
 CORS(app)
-
-# Import models
-from models.models import Base, User, Deal, Group, Order
-
-# Initialize database and migrations
-with engine.connect() as connection:
-    logger.info("Initializing database and migrations...")
-    init_db(app)
-    init_migrations(app)
-    logger.info("Database and migrations initialized successfully.")
 
 # Import and register blueprints
 from routes.auth_routes import auth_bp

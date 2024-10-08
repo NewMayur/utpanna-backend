@@ -14,3 +14,7 @@ def access_secret_version(project_id, secret_id, version_id=1):
         _, project = google.auth.default()
         print(f"Default project: {project}")
         raise
+
+def get_default_credentials():
+    credentials, project = google.auth.default()
+    return credentials, project

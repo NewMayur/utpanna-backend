@@ -4,12 +4,17 @@ WORKDIR /app
 
 RUN mkdir /app/data
 
+ARG GOOGLE_APPLICATION_CREDENTIALS
+ENV GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     pkg-config \
     default-libmysqlclient-dev \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
+
+
 
 # Set environment variables for mysqlclient
 ENV MYSQLCLIENT_CFLAGS="-I/usr/include/mysql"
