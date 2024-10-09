@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 project_id = os.getenv('PROJECT_ID')
 cred_json = access_secret_version(project_id, 'FIREBASE_ADMINSDK_PATH')
 cred = credentials.Certificate(json.loads(cred_json))
+firebase_admin.initialize_app(cred)
 
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
