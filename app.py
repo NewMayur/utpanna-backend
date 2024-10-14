@@ -12,7 +12,8 @@ from sqlalchemy import text
 import logging
 from extensions import engine, Session
 from dotenv import load_dotenv
-from utils.db_setup import initialize_database
+from sqlalchemy import inspect
+from models.models import Base
 
 load_dotenv()
 
@@ -72,17 +73,17 @@ def create_session():
 def shutdown_session(exception=None):
     Session.remove()
 
-# def test_db_connection():
-#     try:
-#         with engine.connect() as connection:
-#             result = connection.execute(text("SELECT 1"))
-#             logger.info(f"Initial database connection test successful: {result.fetchone()[0]}")
-#     except SQLAlchemyError as e:
-#         logger.error(f"Initial database connection test failed: {str(e)}")
-#         raise
+def create_tables(engine):
+    inspector = inspect(engine)
+    existing_tables = inspector.get_table_names()
+    
+    if not existing_tables:
+        Base.metadata.create_all(engine)
+        print("Tables created successfully.")
+    else:
+        print("Tables already exist.")
 
 if __name__ == '__main__':
     logger.info("Starting the application...")
-    initialize_database()
-    # test_db_connection()
+    create_tables(engine)
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
