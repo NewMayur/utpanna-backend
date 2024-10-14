@@ -12,7 +12,7 @@ def connect_with_connector() -> sqlalchemy.engine.base.Engine:
         instance_connection_name = os.getenv('INSTANCE_CONNECTION_NAME')
         db_user = os.getenv('DB_USER')
         project_id = os.getenv('PROJECT_ID')
-        db_pass = access_secret_version(project_id, 'DB_PASS')
+        db_pass = access_secret_version(project_id, 'DEV_DB_PASS')
         db_name = os.getenv('DB_NAME')
 
         if not all([instance_connection_name, db_user, project_id, db_pass, db_name]):

@@ -12,6 +12,7 @@ from sqlalchemy import text
 import logging
 from extensions import engine, Session
 from dotenv import load_dotenv
+from utils.db_setup import initialize_database
 
 load_dotenv()
 
@@ -33,7 +34,8 @@ app.config['JWT_SECRET_KEY'] = access_secret_version(project_id, 'JWT_SECRET_KEY
 app.config['CACHE_TYPE'] = 'simple'
 
 # Use the engine created by connect_with_connector()
-app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
+app.config['SQLALCHEMY_DATABASE_URI'] = str(engine.url)
+logger.info(f"Database URL: {engine.url}")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 logger.info(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
@@ -70,16 +72,17 @@ def create_session():
 def shutdown_session(exception=None):
     Session.remove()
 
-def test_db_connection():
-    try:
-        with engine.connect() as connection:
-            result = connection.execute(text("SELECT 1"))
-            logger.info(f"Initial database connection test successful: {result.fetchone()[0]}")
-    except SQLAlchemyError as e:
-        logger.error(f"Initial database connection test failed: {str(e)}")
-        raise
+# def test_db_connection():
+#     try:
+#         with engine.connect() as connection:
+#             result = connection.execute(text("SELECT 1"))
+#             logger.info(f"Initial database connection test successful: {result.fetchone()[0]}")
+#     except SQLAlchemyError as e:
+#         logger.error(f"Initial database connection test failed: {str(e)}")
+#         raise
 
 if __name__ == '__main__':
     logger.info("Starting the application...")
-    test_db_connection()
+    initialize_database()
+    # test_db_connection()
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
