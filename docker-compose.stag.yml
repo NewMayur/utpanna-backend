@@ -1,0 +1,9 @@
+services:
+  utpanna-stag-backend:
+    build: .
+    image: gcr.io/utpanna-backend/utpanna-stag-backend:latest
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+      - ENV=stag

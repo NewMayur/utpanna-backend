@@ -1,20 +1,9 @@
 services:
   utpanna-dev-backend:
     build: .
-    image: gcr.io/utpanna-dev/utpanna-backend:latest
+    image: gcr.io/utpanna-backend/utpanna-dev-backend:latest
     ports:
-      - "8080:8080"
-    volumes:
-      - ./data:/app/data
-    depends_on:
-      - db
-
-  db:
-    image: utpanna-dev-db
-    restart: always
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - /cloudsql:/cloudsql
-
-volumes:
-  mysql_data:
+      - "${PORT:-8080}:${PORT:-8080}"
+    environment:
+      - PORT=${PORT:-8080}
+      - ENV=dev

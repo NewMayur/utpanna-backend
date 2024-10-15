@@ -1,0 +1,6 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '--build-arg', 'ENV=${_ENV}', '-t', 'gcr.io/${PROJECT_ID}/utpanna-backend:${_ENV}', '.']
+
+substitutions:
+  _ENV: dev  # Default value, will be overridden by trigger settings
