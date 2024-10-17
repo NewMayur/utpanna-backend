@@ -1,9 +1,0 @@
-services:
-  utpanna-prod-backend:
-    build: .
-    image: gcr.io/utpanna-backend/utpanna-prod-backend:latest
-    ports:
-      - "8082:8080"
-    environment:
-      - PORT=8080
-      - ENV=prod

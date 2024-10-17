@@ -2,9 +2,9 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-RUN mkdir /config
+# RUN mkdir /config
 
-COPY config/application_default_credentials.json config/application_default_credentials.json
+# COPY config/application_default_credentials.json config/application_default_credentials.json
 
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
@@ -19,8 +19,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-# Make sure entrypoint.sh is executable
-RUN chmod +x /app/entrypoint.sh
-
-# Use entrypoint.sh to run your application
-ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]

@@ -51,9 +51,11 @@ from routes.deal_routes import deal
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(deal)
 
+
 @app.route('/test', methods=['GET'])
 def test():
-    return jsonify({"message": "Server is reachable"}), 200
+    env = os.getenv('ENV')
+    return jsonify({"message": f"{env} server is reachable"}), 200
 
 @app.route('/db-test', methods=['GET'])
 def db_test():
@@ -86,4 +88,4 @@ def create_tables(engine):
 if __name__ == '__main__':
     logger.info("Starting the application...")
     create_tables(engine)
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    app.run(debug=True, host='0.0.0.0', port=int(os.getenv('PORT', 8080)))
