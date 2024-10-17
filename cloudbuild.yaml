@@ -9,11 +9,11 @@ steps:
       - '-c'
       - |
         if [ "$BRANCH_NAME" == "develop" ]; then
-          gcloud run deploy _SERVICE_NAME --image gcr.io/$PROJECT_ID/utpanna-backend:$SHORT_SHA --region $_DEPLOY_REGION --platform _PLATFORM;
+          gcloud run deploy _SERVICE_NAME --image gcr.io/$PROJECT_ID/utpanna-backend:$SHORT_SHA --region $_DEPLOY_REGION --platform $_PLATFORM;
         elif [ "$BRANCH_NAME" == "main" ]; then
-          gcloud run deploy _SERVICE_NAME --image gcr.io/$PROJECT_ID/utpanna-backend:$SHORT_SHA --region $_DEPLOY_REGION --platform _PLATFORM;
+          gcloud run deploy _SERVICE_NAME --image gcr.io/$PROJECT_ID/utpanna-backend:$SHORT_SHA --region $_DEPLOY_REGION --platform $_PLATFORM;
         elif [[ "$TAG_NAME" == v* ]]; then
-          gcloud run deploy _SERVICE_NAME --image gcr.io/$PROJECT_ID/utpanna-backend:$SHORT_SHA --region $_DEPLOY_REGION --platform _PLATFORM;
+          gcloud run deploy _SERVICE_NAME --image gcr.io/$PROJECT_ID/utpanna-backend:$SHORT_SHA --region $_DEPLOY_REGION --platform $_PLATFORM;
         fi
 images:
   - 'gcr.io/$PROJECT_ID/utpanna-backend:$SHORT_SHA'
