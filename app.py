@@ -6,7 +6,7 @@ import firebase_admin
 from firebase_admin import credentials
 import os
 import json
-from utils.secrets import access_secret_version
+from utils.secrets_utils import access_secret_version
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 import logging

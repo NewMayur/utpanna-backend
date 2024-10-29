@@ -2,7 +2,7 @@ import os
 import pymysql
 import sqlalchemy
 from google.cloud.sql.connector import Connector, IPTypes
-from utils.secrets import access_secret_version
+from utils.secrets_utils import access_secret_version
 import logging
 
 logger = logging.getLogger(__name__)
