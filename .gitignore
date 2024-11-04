@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 models/__pycache__/__init__.cpython-312.pyc
 models/__pycache__/models.cpython-312.pyc
+models/__pycache__/
 
 # Virtual environment
 venv/
@@ -33,11 +34,4 @@ Thumbs.db
 
 # Other fles
 /config/
-
-models/__pycache__/__init__.cpython-312.pyc
-models/__pycache__/models.cpython-312.pyc
-models/__pycache__/__init__.cpython-312.pyc
-models/__pycache__/models.cpython-312.pyc
-routes/__pycache__/auth_routes.cpython-312.pyc
-routes/__pycache__/deal_routes.cpython-312.pyc
 mysql-integration.txt
