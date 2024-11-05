@@ -148,7 +148,7 @@ def participate_in_deal(deal_id):
     try:
         token = request.headers['Authorization'].split(" ")[1]
         decoded_token = auth.verify_id_token(token)
-        firebase_uid = decoded_token['uid']
+        firebase_uid = decoded_token['user_id']
         
         user = DatabaseManager.get_user_by_firebase_uid(firebase_uid)
         if not user.name or not user.address:
@@ -179,20 +179,32 @@ def update_user_details():
         if not data.get('name') or not data.get('address'):
             return jsonify({"error": "Name and address are required"}), 400
             
-        user = DatabaseManager.update_user_details(
-            firebase_uid=decoded_token['user_id'],
-            name=data['name'],
-            address=data['address']
-        )
+        # Check if user exists
+        user = DatabaseManager.get_user_by_firebase_uid(decoded_token['user_id'])
         
         if user:
-            return jsonify({
-                "message": "Details updated successfully",
-                "user": {
-                    "name": user.name,
-                    "address": user.address
-                }
-            }), 200
-        return jsonify({"error": "User not found"}), 404
+            # Update existing user
+            user = DatabaseManager.update_user_details(
+                firebase_uid=decoded_token['user_id'],
+                name=data['name'],
+                address=data['address']
+            )
+        else:
+            # Create new user
+            user = DatabaseManager.add_user(
+                firebase_uid=decoded_token['user_id'],
+                phone_number=decoded_token.get('phone_number'),
+                name=data['name'],
+                address=data['address']
+            )
+        
+        return jsonify({
+            "message": "Details updated successfully",
+            "user": {
+                "name": user.name,
+                "address": user.address
+            }
+        }), 200
+            
     except Exception as e:
         return jsonify({"error": str(e)}), 400
