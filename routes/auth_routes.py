@@ -37,47 +37,6 @@ def verify_otp():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-# @auth_bp.route('/user/details', methods=['GET'])
-# @firebase_token_required()
-# def get_user_details():
-#     try:
-#         token = request.headers['Authorization'].split(" ")[1]
-#         decoded_token = auth.verify_id_token(token)
-#         user = DatabaseManager.get_user_by_firebase_uid(decoded_token['uid'])
-#         if user:
-#             return jsonify({
-#                 "name": user.name,
-#                 "address": user.address,
-#                 "phone_number": user.phone_number
-#             }), 200
-#         return jsonify({"error": "User not found"}), 404
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 401
-
-# @auth_bp.route('/user/details', methods=['POST'])
-# @firebase_token_required()
-# def update_user_details():
-#     try:
-#         data = request.get_json()
-#         token = request.headers['Authorization'].split(" ")[1]
-#         decoded_token = auth.verify_id_token(token)
-        
-#         user = DatabaseManager.get_user_by_firebase_uid(decoded_token['uid'])
-#         if user:
-#             user.name = data.get('name')
-#             user.address = data.get('address')
-#             Session.commit()
-#             return jsonify({
-#                 "message": "Details updated successfully",
-#                 "user": {
-#                     "name": user.name,
-#                     "address": user.address
-#                 }
-#             }), 200
-#         return jsonify({"error": "User not found"}), 404
-#     except Exception as e:
-#         Session.rollback()
-#         return jsonify({"error": str(e)}), 400
 
 @auth_bp.route('/admin/register', methods=['POST'])
 def admin_register():
@@ -131,31 +90,3 @@ def get_user_details():
         return jsonify({"error": "User not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 401
-
-# @auth_bp.route('/user/details', methods=['POST'])
-# @firebase_token_required()
-# def update_user_details():
-#     try:
-#         data = request.get_json()
-#         token = request.headers['Authorization'].split(" ")[1]
-#         decoded_token = auth.verify_id_token(token)
-        
-#         if not data.get('name') or not data.get('address'):
-#             return jsonify({"error": "Name and address are required"}), 400
-            
-#         user = DatabaseManager.get_user_by_firebase_uid(decoded_token['uid'])
-#         if user:
-#             user.name = data['name']
-#             user.address = data['address']
-#             Session.commit()
-#             return jsonify({
-#                 "message": "Details updated successfully",
-#                 "user": {
-#                     "name": user.name,
-#                     "address": user.address
-#                 }
-#             }), 200
-#         return jsonify({"error": "User not found"}), 404
-#     except Exception as e:
-#         Session.rollback()
-#         return jsonify({"error": str(e)}), 400
