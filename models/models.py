@@ -6,23 +6,30 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 Base = declarative_base()
 
-class User(Base):
-    __tablename__ = 'user'
+class Admin(Base):
+    __tablename__ = 'admin'
     id = Column(Integer, primary_key=True)
-    firebase_uid = Column(String(128), unique=True, nullable=True)
-    phone_number = Column(String(20), unique=True, nullable=True)
-    username = Column(String(80), unique=True, nullable=True)
-    email = Column(String(120), unique=True, nullable=True)
-    password_hash = Column(String(255), nullable=True)  # Changed from 128 to 255
-
-    groups = relationship('Group', back_populates='creator')
-    orders = relationship('Order', back_populates='user')
+    username = Column(String(80), unique=True, nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+class User(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    firebase_uid = Column(String(128), unique=True, nullable=True)
+    phone_number = Column(String(20), unique=True, nullable=True)
+    name = Column(String(100), nullable=True)
+    address = Column(Text, nullable=True)
+    
+    groups = relationship('Group', back_populates='creator')
+    orders = relationship('Order', back_populates='user')
+    participations = relationship('DealParticipant', back_populates='user')
 
 class Deal(Base):
     __tablename__ = 'deal'
@@ -40,6 +47,7 @@ class Deal(Base):
     groups = relationship('Group', back_populates='deal')
     orders = relationship('Order', back_populates='deal')
     images = relationship('DealImage', back_populates='deal')
+    participants = relationship('DealParticipant', back_populates='deal')
 
 class DealImage(Base):
     __tablename__ = 'deal_image'
@@ -73,3 +81,13 @@ class Order(Base):
     user = relationship('User', back_populates='orders')
     deal = relationship('Deal', back_populates='orders')
     group = relationship('Group', back_populates='orders')
+
+class DealParticipant(Base):
+    __tablename__ = 'deal_participant'
+    id = Column(Integer, primary_key=True)
+    deal_id = Column(Integer, ForeignKey('deal.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    deal = relationship('Deal', back_populates='participants')
+    user = relationship('User', back_populates='participations')

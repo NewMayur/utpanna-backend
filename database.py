@@ -1,14 +1,17 @@
-from models.models import User, Deal, DealImage
+from models.models import Admin, DealParticipant, User, Deal, DealImage
 from sqlalchemy.exc import SQLAlchemyError
 from extensions import Session
 
 class DatabaseManager:
     @staticmethod
-    def add_user(username, email, password, firebase_uid=None, phone_number=None):
+    def add_user(firebase_uid, phone_number=None, name=None, address=None):
         try:
-            new_user = User(username=username, email=email, firebase_uid=firebase_uid, phone_number=phone_number)
-            if password:
-                new_user.set_password(password)
+            new_user = User(
+                firebase_uid=firebase_uid,
+                phone_number=phone_number,
+                name=name,
+                address=address
+            )
             Session.add(new_user)
             Session.commit()
             return new_user
@@ -17,16 +20,74 @@ class DatabaseManager:
             raise e
 
     @staticmethod
-    def get_user_by_username(username):
-        return Session.query(User).filter_by(username=username).first()
+    def add_admin(username, email, password):
+        try:
+            new_admin = Admin(username=username, email=email)
+            new_admin.set_password(password)
+            Session.add(new_admin)
+            Session.commit()
+            return new_admin
+        except SQLAlchemyError as e:
+            Session.rollback()
+            raise e
 
     @staticmethod
-    def get_user_by_email(email):
-        return Session.query(User).filter_by(email=email).first()
+    def get_admin_by_username(username):
+        return Session.query(Admin).filter_by(username=username).first()
+
+    @staticmethod
+    def get_admin_by_email(email):
+        return Session.query(Admin).filter_by(email=email).first()
 
     @staticmethod
     def get_user_by_firebase_uid(firebase_uid):
         return Session.query(User).filter_by(firebase_uid=firebase_uid).first()
+    
+    @staticmethod
+    def update_user_details(firebase_uid, name, address):
+        try:
+            user = Session.query(User).filter_by(firebase_uid=firebase_uid).first()
+            if user:
+                user.name = name
+                user.address = address
+                Session.commit()
+                return user
+            return None
+        except SQLAlchemyError as e:
+            Session.rollback()
+            raise e
+
+    @staticmethod
+    def add_participant(deal_id, firebase_uid):
+        try:
+            user = Session.query(User).filter_by(firebase_uid=firebase_uid).first()
+            deal = Session.query(Deal).get(deal_id)
+            
+            if not user or not deal:
+                return None, "User or deal not found"
+                
+            # Check if already participated
+            existing = Session.query(DealParticipant).filter_by(
+                deal_id=deal_id,
+                user_id=user.id
+            ).first()
+            
+            if existing:
+                return None, "Already participated"
+                
+            participant = DealParticipant(deal_id=deal_id, user_id=user.id)
+            Session.add(participant)
+            
+            # Update deal status
+            deal.current_participants += 1
+            if deal.current_participants >= deal.min_participants:
+                deal.status = 'closed'
+                
+            Session.commit()
+            return participant, None
+        except SQLAlchemyError as e:
+            Session.rollback()
+            raise e
 
     @staticmethod
     def add_deal(title, description, price, user_id, min_participants):
