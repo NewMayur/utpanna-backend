@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from utils.auth_utils import firebase_token_required
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from database import DatabaseManager
+from firebase_admin import auth
 
 deal = Blueprint('deal', __name__)
 
@@ -46,13 +47,17 @@ def get_deal_list():
 @deal.route('/deals', methods=['POST'])
 @jwt_required()
 def create_deal():
+    current_user = get_jwt_identity()
+    # Verify it's an admin
+    if not isinstance(current_user, dict) or current_user.get('type') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+        
     data = request.get_json()
-    user_id = get_jwt_identity()
     new_deal = DatabaseManager.add_deal(
         title=data['title'],
         description=data['description'],
         price=data['price'],
-        user_id=user_id,
+        user_id=current_user['id'],
         min_participants=data['min_participants']
     )
     return jsonify({"message": "Deal created successfully", "deal_id": new_deal.id}), 201
@@ -76,26 +81,30 @@ def get_deal(deal_id):
         return jsonify(deal_data), 200
     return jsonify({"message": "Deal not found"}), 404
 
-@deal.route('/deals/<int:deal_id>', methods=['PUT'])
+@deal.route('/deals/<int:deal_id>', methods=['PUT', 'DELETE'])
 @jwt_required()
-def update_deal(deal_id):
-    data = request.get_json()
-    updated_deal = DatabaseManager.update_deal(
-        deal_id=deal_id,
-        title=data.get('title'),
-        description=data.get('description'),
-        price=data.get('price'),
-    )
-    if updated_deal:
-        return jsonify({"message": "Deal updated successfully"}), 200
-    return jsonify({"message": "Deal not found"}), 404
-
-@deal.route('/deals/<int:deal_id>', methods=['DELETE'])
-@jwt_required()
-def delete_deal(deal_id):
-    if DatabaseManager.delete_deal(deal_id):
-        return jsonify({"message": "Deal deleted successfully"}), 200
-    return jsonify({"message": "Deal not found"}), 404
+def manage_deal(deal_id):
+    current_user = get_jwt_identity()
+    # Verify it's an admin
+    if not isinstance(current_user, dict) or current_user.get('type') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    if request.method == 'PUT':
+        data = request.get_json()
+        updated_deal = DatabaseManager.update_deal(
+            deal_id=deal_id,
+            title=data.get('title'),
+            description=data.get('description'),
+            price=data.get('price'),
+        )
+        if updated_deal:
+            return jsonify({"message": "Deal updated successfully"}), 200
+        return jsonify({"message": "Deal not found"}), 404
+        
+    elif request.method == 'DELETE':
+        if DatabaseManager.delete_deal(deal_id):
+            return jsonify({"message": "Deal deleted successfully"}), 200
+        return jsonify({"message": "Deal not found"}), 404
 
 @deal.route('/search', methods=['GET'])
 @firebase_token_required()
@@ -131,3 +140,59 @@ def delete_deal_image(image_id):
     if DatabaseManager.delete_deal_image(image_id):
         return jsonify({"message": "Image deleted successfully"}), 200
     return jsonify({"message": "Image not found"}), 404
+
+
+@deal.route('/deals/<int:deal_id>/participate', methods=['POST'])
+@firebase_token_required()
+def participate_in_deal(deal_id):
+    try:
+        token = request.headers['Authorization'].split(" ")[1]
+        decoded_token = auth.verify_id_token(token)
+        firebase_uid = decoded_token['uid']
+        
+        user = DatabaseManager.get_user_by_firebase_uid(firebase_uid)
+        if not user.name or not user.address:
+            return jsonify({
+                "error": "User details required",
+                "code": "DETAILS_REQUIRED"
+            }), 400
+            
+        participant, error = DatabaseManager.add_participant(deal_id, firebase_uid)
+        if error:
+            return jsonify({"error": error}), 400
+            
+        return jsonify({
+            "message": "Successfully participated in deal",
+            "deal_id": deal_id
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@deal.route('/user/details', methods=['POST'])
+@firebase_token_required()
+def update_user_details():
+    try:
+        data = request.get_json()
+        token = request.headers['Authorization'].split(" ")[1]
+        decoded_token = auth.verify_id_token(token)
+        
+        if not data.get('name') or not data.get('address'):
+            return jsonify({"error": "Name and address are required"}), 400
+            
+        user = DatabaseManager.update_user_details(
+            firebase_uid=decoded_token['user_id'],
+            name=data['name'],
+            address=data['address']
+        )
+        
+        if user:
+            return jsonify({
+                "message": "Details updated successfully",
+                "user": {
+                    "name": user.name,
+                    "address": user.address
+                }
+            }), 200
+        return jsonify({"error": "User not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
