@@ -40,7 +40,8 @@ def get_deal_list():
             'current_participants': deal.current_participants,
             'status': deal.status,
             'created_at': str(deal.created_at),
-            'updated_at': str(deal.updated_at)
+            'updated_at': str(deal.updated_at),
+            'progress_percentage': (deal.current_participants / deal.min_participants) * 100
         })
     return jsonify(deal_data), 200
 
@@ -208,3 +209,58 @@ def update_user_details():
             
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+@deal.route('/deals/<int:deal_id>/participants', methods=['GET'])
+@jwt_required()
+def get_deal_participants(deal_id):
+    deal = DatabaseManager.get_deal(deal_id)
+    if not deal:
+        return jsonify({"error": "Deal not found"}), 404
+        
+    participants = []
+    for participant in deal.participants:
+        user = participant.user
+        participants.append({
+            'id': user.id,
+            'name': user.name,
+            'phone_number': user.phone_number,
+            'address': user.address,
+            'joined_at': str(participant.created_at)
+        })
+    
+    return jsonify(participants), 200
+
+
+@deal.route('/view-deal/<int:deal_id>', methods=['GET'])
+@jwt_required()
+def view_deal(deal_id):
+    deal = DatabaseManager.get_deal(deal_id)
+    if not deal:
+        return jsonify({"message": "Deal not found"}), 404
+
+    # Get participants
+    participants = []
+    for participant in deal.participants:
+        user = participant.user
+        participants.append({
+            'id': user.id,
+            'name': user.name,
+            'phone_number': user.phone_number,
+            'address': user.address,
+            'joined_at': str(participant.created_at)
+        })
+
+    deal_data = {
+        'id': deal.id,
+        'title': deal.title,
+        'description': deal.description,
+        'price': deal.price,
+        'min_participants': deal.min_participants,
+        'current_participants': deal.current_participants,
+        'status': deal.status,
+        'created_at': str(deal.created_at),
+        'updated_at': str(deal.updated_at),
+        'progress_percentage': (deal.current_participants / deal.min_participants) * 100,
+        'participants': participants
+    }
+    return jsonify(deal_data), 200
