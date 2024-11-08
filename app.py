@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 import firebase_admin
 from firebase_admin import credentials
+from google.cloud import storage
 import os
 import json
 from utils.secrets_utils import access_secret_version
@@ -26,7 +27,7 @@ cred_json = access_secret_version(project_id, 'FIREBASE_ADMINSDK_PATH')
 cred = credentials.Certificate(json.loads(cred_json))
 firebase_admin.initialize_app(cred)
 
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+storage_client = storage.Client()
 
 app = Flask(__name__)
 jwt = JWTManager(app)
@@ -38,6 +39,9 @@ app.config['CACHE_TYPE'] = 'simple'
 app.config['SQLALCHEMY_DATABASE_URI'] = str(engine.url)
 logger.info(f"Database URL: {engine.url}")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+app.storage_client = storage_client
+app.config['BUCKET_NAME'] = os.getenv('BUCKET_NAME')
 
 logger.info(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
 

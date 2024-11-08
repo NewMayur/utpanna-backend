@@ -139,6 +139,16 @@ class DatabaseManager:
     @staticmethod
     def add_deal_image(deal_id, image_url):
         try:
+            # Check if deal exists
+            deal = Session.query(Deal).get(deal_id)
+            if not deal:
+                raise ValueError("Deal not found")
+                
+            # Check number of existing images
+            existing_images = Session.query(DealImage).filter_by(deal_id=deal_id).count()
+            if existing_images >= 3:
+                raise ValueError("Maximum number of images reached")
+                
             new_image = DealImage(deal_id=deal_id, image_url=image_url)
             Session.add(new_image)
             Session.commit()

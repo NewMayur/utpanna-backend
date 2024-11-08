@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from utils.auth_utils import firebase_token_required
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from database import DatabaseManager
 from firebase_admin import auth
+from werkzeug.utils import secure_filename
+import uuid
 
 deal = Blueprint('deal', __name__)
 
@@ -118,22 +120,74 @@ def search_deals():
 @deal.route('/deals/<int:deal_id>/images', methods=['POST'])
 @jwt_required()
 def add_deal_image(deal_id):
-    data = request.get_json()
-    image_url = data.get('image_url')
-    if not image_url:
-        return jsonify({"message": "Image URL is required"}), 400
+    current_user = get_jwt_identity()
+    # Verify it's an admin
+    if not isinstance(current_user, dict) or current_user.get('type') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    if 'images' not in request.files:
+        return jsonify({"error": "No images provided"}), 400
+        
+    images = request.files.getlist('images')
     
-    new_image = DatabaseManager.add_deal_image(deal_id, image_url)
-    if new_image:
-        return jsonify({"message": "Image added successfully", "image_id": new_image.id}), 201
-    return jsonify({"message": "Failed to add image"}), 400
+    if len(images) > 3:
+        return jsonify({"error": "Maximum 3 images allowed"}), 400
+        
+    storage_client = current_app.storage_client
+    bucket = storage_client.bucket(current_app.config['BUCKET_NAME'])
+    
+    uploaded_images = []
+    
+    try:
+        for image in images:
+            if image and allowed_file(image.filename):
+                # Generate unique filename
+                filename = secure_filename(image.filename)
+                unique_filename = f"deals/{deal_id}/{str(uuid.uuid4())}_{filename}"
+                
+                # Upload to Cloud Storage
+                blob = bucket.blob(unique_filename)
+                blob.upload_from_string(
+                    image.read(),
+                    content_type=image.content_type
+                )
+                
+                # Make the blob publicly readable
+                blob.make_public()
+                
+                # Store image URL in database
+                image_url = blob.public_url
+                new_image = DatabaseManager.add_deal_image(deal_id, image_url)
+                uploaded_images.append({
+                    "id": new_image.id,
+                    "url": image_url
+                })
+                
+        return jsonify({
+            "message": "Images uploaded successfully",
+            "images": uploaded_images
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @deal.route('/deals/<int:deal_id>/images', methods=['GET'])
 @firebase_token_required()
 def get_deal_images(deal_id):
-    images = DatabaseManager.get_deal_images(deal_id)
-    image_data = [{"id": image.id, "image_url": image.image_url} for image in images]
-    return jsonify(image_data), 200
+    try:
+        images = DatabaseManager.get_deal_images(deal_id)
+        image_data = [{
+            "id": image.id,
+            "url": image.image_url
+        } for image in images]
+        return jsonify(image_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @deal.route('/deals/images/<int:image_id>', methods=['DELETE'])
 @jwt_required()
