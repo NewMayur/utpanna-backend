@@ -5,6 +5,7 @@ from database import DatabaseManager
 from firebase_admin import auth
 from werkzeug.utils import secure_filename
 import uuid
+from extensions import Session
 
 deal = Blueprint('deal', __name__)
 
@@ -14,6 +15,8 @@ def get_deals():
     deals = DatabaseManager.get_all_deals()
     deal_data = []
     for deal in deals:
+        images = DatabaseManager.get_deal_images(deal.id)
+        image_urls = [image.image_url for image in images]
         deal_data.append({
             'id': deal.id,
             'title': deal.title,
@@ -22,6 +25,7 @@ def get_deals():
             'min_participants': deal.min_participants,
             'current_participants': deal.current_participants,
             'status': deal.status,
+            'images': image_urls,
             'created_at': str(deal.created_at),
             'updated_at': str(deal.updated_at)
         })
@@ -55,15 +59,37 @@ def create_deal():
     if not isinstance(current_user, dict) or current_user.get('type') != 'admin':
         return jsonify({"error": "Unauthorized"}), 403
         
-    data = request.get_json()
-    new_deal = DatabaseManager.add_deal(
-        title=data['title'],
-        description=data['description'],
-        price=data['price'],
-        user_id=current_user['id'],
-        min_participants=data['min_participants']
-    )
-    return jsonify({"message": "Deal created successfully", "deal_id": new_deal.id}), 201
+    try:
+        # Get deal data and images from form
+        data = request.form
+        images = request.files.getlist('images') if 'images' in request.files else []
+        
+        # First create the deal
+        new_deal = DatabaseManager.add_deal(
+            title=data['title'],
+            description=data['description'],
+            price=float(data['price']),
+            user_id=current_user['id'],
+            min_participants=int(data['min_participants'])
+        )
+        
+        # If deal creation successful, handle images
+        uploaded_images = []
+        if images:
+            # Call the existing add_deal_image function
+            response = add_deal_image(new_deal.id)
+            if response[1] == 201:  # If images uploaded successfully
+                uploaded_images = response[0].get_json()['images']
+        
+        return jsonify({
+            "message": "Deal created successfully", 
+            "deal_id": new_deal.id,
+            "images": uploaded_images
+        }), 201
+        
+    except Exception as e:
+        Session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @deal.route('/deals/<int:deal_id>', methods=['GET'])
 @firebase_token_required()
@@ -304,6 +330,15 @@ def view_deal(deal_id):
             'joined_at': str(participant.created_at)
         })
 
+    # Get images
+    images = []
+    for image in deal.images:
+        images.append({
+            'id': image.id,
+            'image_url': image.image_url,
+            'created_at': str(image.created_at)
+        })
+
     deal_data = {
         'id': deal.id,
         'title': deal.title,
@@ -315,6 +350,7 @@ def view_deal(deal_id):
         'created_at': str(deal.created_at),
         'updated_at': str(deal.updated_at),
         'progress_percentage': (deal.current_participants / deal.min_participants) * 100,
-        'participants': participants
+        'participants': participants,
+        'images': images
     }
     return jsonify(deal_data), 200
