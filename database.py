@@ -1,6 +1,8 @@
 from models.models import Admin, DealParticipant, User, Deal, DealImage
 from sqlalchemy.exc import SQLAlchemyError
 from extensions import Session
+from utils.storage_utils import delete_image_from_bucket
+import os
 
 class DatabaseManager:
     @staticmethod
@@ -128,6 +130,25 @@ class DatabaseManager:
         try:
             deal = Session.query(Deal).get(deal_id)
             if deal:
+                # First delete all participants
+                for participant in deal.participants:
+                    Session.delete(participant)
+                # First delete all associated images
+                for image in deal.images:
+                    # Extract bucket name and filename from image_url
+                    image_url = image.image_url
+                    if image_url:
+                        try:
+                            bucket_name = "utpanna-dev-images"  # Your bucket name
+                            image_filename = image_url.split('/')[-1]
+                            delete_image_from_bucket(bucket_name, deal_id, image_filename)
+                        except Exception as e:
+                            print(f"Error deleting image from storage: {str(e)}")
+                    
+                    # Delete image record from database
+                    Session.delete(image)
+                
+                # Then delete the deal
                 Session.delete(deal)
                 Session.commit()
                 return True
