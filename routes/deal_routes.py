@@ -73,7 +73,8 @@ def create_deal():
             mrp=data.get('mrp'),
             deal_price=data.get('deal_price'),
             user_id=current_user['id'],
-            min_participants=int(data['min_participants'])
+            min_participants=int(data['min_participants']),
+            status=data.get('status')
         )
         
         # If deal creation successful, handle images
@@ -130,6 +131,7 @@ def manage_deal(deal_id):
             description=data.get('description'),
             mrp=data.get('mrp'),
             deal_price=data.get('deal_price'),
+            status=data.get('status'),
         )
         if updated_deal:
             return jsonify({"message": "Deal updated successfully"}), 200
