@@ -21,7 +21,8 @@ def get_deals():
             'id': deal.id,
             'title': deal.title,
             'description': deal.description,
-            'price': deal.price,
+            'mrp': deal.mrp,
+            'deal_price': deal.deal_price,
             'min_participants': deal.min_participants,
             'current_participants': deal.current_participants,
             'status': deal.status,
@@ -41,7 +42,8 @@ def get_deal_list():
             'id': deal.id,
             'title': deal.title,
             'description': deal.description,
-            'price': deal.price,
+            'mrp': deal.mrp,
+            'deal_price': deal.deal_price,
             'min_participants': deal.min_participants,
             'current_participants': deal.current_participants,
             'status': deal.status,
@@ -68,7 +70,8 @@ def create_deal():
         new_deal = DatabaseManager.add_deal(
             title=data['title'],
             description=data['description'],
-            price=float(data['price']),
+            mrp=data.get('mrp'),
+            deal_price=data.get('deal_price'),
             user_id=current_user['id'],
             min_participants=int(data['min_participants'])
         )
@@ -100,7 +103,8 @@ def get_deal(deal_id):
             'id': deal.id,
             'title': deal.title,
             'description': deal.description,
-            'price': deal.price,
+            'mrp': deal.mrp,
+            'deal_price': deal.deal_price,
             'min_participants': deal.min_participants,
             'current_participants': deal.current_participants,
             'status': deal.status,
@@ -124,7 +128,8 @@ def manage_deal(deal_id):
             deal_id=deal_id,
             title=data.get('title'),
             description=data.get('description'),
-            price=data.get('price'),
+            mrp=data.get('mrp'),
+            deal_price=data.get('deal_price'),
         )
         if updated_deal:
             return jsonify({"message": "Deal updated successfully"}), 200
@@ -343,7 +348,8 @@ def view_deal(deal_id):
         'id': deal.id,
         'title': deal.title,
         'description': deal.description,
-        'price': deal.price,
+        'mrp': deal.mrp,
+        'deal_price': deal.deal_price,
         'min_participants': deal.min_participants,
         'current_participants': deal.current_participants,
         'status': deal.status,

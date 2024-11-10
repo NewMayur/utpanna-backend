@@ -92,9 +92,9 @@ class DatabaseManager:
             raise e
 
     @staticmethod
-    def add_deal(title, description, price, user_id, min_participants):
+    def add_deal(title, description, deal_price, mrp, user_id, min_participants):
         try:
-            new_deal = Deal(title=title, description=description, price=price, user_id=user_id, min_participants=min_participants)
+            new_deal = Deal(title=title, description=description, deal_price=deal_price, mrp = mrp, user_id=user_id, min_participants=min_participants)
             Session.add(new_deal)
             Session.commit()
             return new_deal
@@ -111,13 +111,14 @@ class DatabaseManager:
         return Session.query(Deal).all()
 
     @staticmethod
-    def update_deal(deal_id, title, description, price):
+    def update_deal(deal_id, title, description, mrp, deal_price):
         try:
             deal = Session.query(Deal).get(deal_id)
             if deal:
                 deal.title = title
                 deal.description = description
-                deal.price = price
+                deal.mrp = mrp
+                deal.deal_price = deal_price
                 Session.commit()
                 return deal
             return None
